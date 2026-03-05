@@ -1,0 +1,333 @@
+---
+title: "Quick Start"
+description: "Get up and running with QueryFilterJPA in 5 minutes"
+---
+
+This guide will walk you through creating your first filtered API endpoint with QueryFilterJPA.
+
+## Prerequisites
+
+- Java 17 or higher
+- Spring Boot 3 or 4
+- Maven or Gradle
+- A JPA-enabled Spring Boot project
+
+## Step-by-Step Guide
+
+<Steps>
+  <Step title="Add the dependency">
+    Add QueryFilterJPA to your project. Choose the artifact matching your Spring Boot version:
+
+    <CodeGroup>
+    ```xml Spring Boot 4
+    <dependency>
+        <groupId>io.github.acoboh</groupId>
+        <artifactId>query-filter-jpa-4</artifactId>
+        <version>2.0.0</version>
+    </dependency>
+    ```
+
+    ```xml Spring Boot 3
+    <dependency>
+        <groupId>io.github.acoboh</groupId>
+        <artifactId>query-filter-jpa-3</artifactId>
+        <version>2.0.0</version>
+    </dependency>
+    ```
+
+    ```gradle Spring Boot 4 (Gradle)
+    implementation 'io.github.acoboh:query-filter-jpa-4:2.0.0'
+    ```
+
+    ```gradle Spring Boot 3 (Gradle)
+    implementation 'io.github.acoboh:query-filter-jpa-3:2.0.0'
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Create your JPA entity">
+    Create a simple entity to filter. We'll use a blog post example:
+
+    ```java
+    @Entity
+    @Table(name = "posts")
+    public class PostBlog {
+        
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        
+        @Column(nullable = false)
+        private String title;
+        
+        @Column(nullable = false)
+        private String author;
+        
+        private int likes;
+        
+        @Column(name = "create_date")
+        private LocalDateTime createDate;
+        
+        // Getters and setters
+    }
+    ```
+  </Step>
+
+  <Step title="Create a repository">
+    Create a JPA repository that extends `JpaSpecificationExecutor`:
+
+    ```java
+    @Repository
+    public interface PostBlogRepository 
+            extends JpaRepository<PostBlog, Long>, 
+                    JpaSpecificationExecutor<PostBlog> {
+    }
+    ```
+
+    <Note>
+    The `JpaSpecificationExecutor` interface is required for QueryFilterJPA to work. It provides the `findAll(Specification<T>)` method that QueryFilter implements.
+    </Note>
+  </Step>
+
+  <Step title="Define your filter class">
+    Create a filter definition class with annotations:
+
+    ```java
+    @QFDefinitionClass(PostBlog.class)
+    public class PostFilterDef {
+        
+        @QFElement("title")
+        private String title;
+        
+        @QFElement("author")
+        private String author;
+        
+        @QFElement("likes")
+        private int likes;
+        
+        @QFDate
+        @QFElement("createDate")
+        private LocalDateTime createDate;
+    }
+    ```
+
+    <Info>
+    - `@QFDefinitionClass` links this filter to your entity
+    - `@QFElement` marks each filterable field
+    - `@QFDate` enables date parsing and operations
+    </Info>
+  </Step>
+
+  <Step title="Enable QueryFilter">
+    Add `@EnableQueryFilter` to your main application class or a configuration class:
+
+    ```java
+    @SpringBootApplication
+    @EnableQueryFilter(basePackageClasses = PostFilterDef.class)
+    public class Application {
+        public static void main(String[] args) {
+            SpringApplication.run(Application.class, args);
+        }
+    }
+    ```
+
+    <Tip>
+    You can also use `basePackages` to scan multiple packages for filter definitions.
+    </Tip>
+  </Step>
+
+  <Step title="Create a controller">
+    Create a REST controller that uses the filter:
+
+    <Tabs>
+      <Tab title="Using @QFParam">
+        Use `@QFParam` when you want a single `filter` query parameter:
+
+        ```java
+        @RestController
+        @RequestMapping("/api/posts")
+        public class PostController {
+            
+            @Autowired
+            private PostBlogRepository repository;
+            
+            @GetMapping
+            public ResponseEntity<List<PostBlog>> getPosts(
+                    @RequestParam(required = false, defaultValue = "") 
+                    @QFParam(PostFilterDef.class) QueryFilter<PostBlog> filter) {
+                
+                List<PostBlog> posts = repository.findAll(filter);
+                return ResponseEntity.ok(posts);
+            }
+        }
+        ```
+
+        **Example request:**
+        ```bash
+        curl "http://localhost:8080/api/posts?filter=author=eq:john&likes=gte:10&sort=-createDate"
+        ```
+      </Tab>
+
+      <Tab title="Using @QFMultiParam">
+        Use `@QFMultiParam` when you want each filter as a separate query parameter:
+
+        ```java
+        @RestController
+        @RequestMapping("/api/posts")
+        public class PostController {
+            
+            @Autowired
+            private PostBlogRepository repository;
+            
+            @GetMapping
+            public ResponseEntity<List<PostBlog>> getPosts(
+                    @QFMultiParam PostFilterDef filter) {
+                
+                List<PostBlog> posts = repository.findAll(filter);
+                return ResponseEntity.ok(posts);
+            }
+        }
+        ```
+
+        **Example request:**
+        ```bash
+        curl "http://localhost:8080/api/posts?author=eq:john&likes=gte:10&sort=-createDate"
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## Test Your API
+
+Now you can test your filtered endpoint:
+
+<Tabs>
+  <Tab title="RHS Colon Syntax">
+    ```bash Filter by author
+    curl "http://localhost:8080/api/posts?filter=author=eq:john"
+    ```
+
+    ```bash Multiple filters
+    curl "http://localhost:8080/api/posts?filter=author=eq:john&likes=gte:10"
+    ```
+
+    ```bash With sorting
+    curl "http://localhost:8080/api/posts?filter=author=eq:john&sort=-createDate"
+    ```
+
+    ```bash Search by title
+    curl "http://localhost:8080/api/posts?filter=title=like:Spring"
+    ```
+  </Tab>
+
+  <Tab title="LHS Brackets Syntax">
+    ```bash Filter by author
+    curl "http://localhost:8080/api/posts?filter=author[eq]=john"
+    ```
+
+    ```bash Multiple filters
+    curl "http://localhost:8080/api/posts?filter=author[eq]=john&likes[gte]=10"
+    ```
+
+    ```bash With sorting
+    curl "http://localhost:8080/api/posts?filter=author[eq]=john&sort=-createDate"
+    ```
+
+    ```bash Search by title
+    curl "http://localhost:8080/api/posts?filter=title[like]=Spring"
+    ```
+  </Tab>
+</Tabs>
+
+## Example Response
+
+```json
+[
+  {
+    "id": 1,
+    "title": "Getting Started with Spring Boot",
+    "author": "john",
+    "likes": 42,
+    "createDate": "2024-01-15T10:30:00"
+  },
+  {
+    "id": 2,
+    "title": "Advanced JPA Techniques",
+    "author": "john",
+    "likes": 15,
+    "createDate": "2024-01-10T14:20:00"
+  }
+]
+```
+
+## Available Operations
+
+You can use these operations in your filters:
+
+| Operation | Code | Example | Description |
+|-----------|------|---------|-------------|
+| Equal | `eq` | `author=eq:john` | Exact match |
+| Not Equal | `ne` | `author=ne:john` | Not equal |
+| Greater Than | `gt` | `likes=gt:10` | Greater than |
+| Greater or Equal | `gte` | `likes=gte:10` | Greater or equal |
+| Less Than | `lt` | `likes=lt:100` | Less than |
+| Less or Equal | `lte` | `likes=lte:100` | Less or equal |
+| Like | `like` | `title=like:Spring` | Contains (case-insensitive by default) |
+| Starts With | `starts` | `title=starts:Getting` | Starts with |
+| Ends With | `ends` | `title=ends:Boot` | Ends with |
+| In | `in` | `author=in:john,jane,bob` | Value in list |
+| Not In | `nin` | `author=nin:spam,test` | Value not in list |
+| Is Null | `null` | `author=null:true` | Is null check |
+
+## Sorting
+
+Sort results by adding `sort` parameter:
+
+```bash Single field ascending
+?filter=author=eq:john&sort=+createDate
+```
+
+```bash Single field descending
+?filter=author=eq:john&sort=-createDate
+```
+
+```bash Multiple fields
+?filter=author=eq:john&sort=-likes,+createDate
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Core Concepts"
+    icon="book-open"
+    href="/concepts/filter-definitions"
+  >
+    Learn about filter definitions, operations, and syntax in depth
+  </Card>
+  
+  <Card
+    title="Advanced Features"
+    icon="wand-magic-sparkles"
+    href="/guides/postgresql-arrays"
+  >
+    Explore PostgreSQL arrays, JSON filtering, and custom predicates
+  </Card>
+  
+  <Card
+    title="OpenAPI Integration"
+    icon="code"
+    href="/openapi/overview"
+  >
+    Add automatic Swagger documentation for your filters
+  </Card>
+  
+  <Card
+    title="API Reference"
+    icon="terminal"
+    href="/api/annotations/qf-element"
+  >
+    Complete reference for all annotations and classes
+  </Card>
+</CardGroup>
