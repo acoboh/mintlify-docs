@@ -156,19 +156,31 @@ At runtime, QueryFilterJPA:
 
 QueryFilterJPA supports a rich set of filter operations:
 
-| Operation        | Syntax          | Description                 |
-| ---------------- | --------------- | --------------------------- |
-| Equal            | `eq:value`      | Exact match                 |
-| Not Equal        | `ne:value`      | Not equal to value          |
-| Greater Than     | `gt:value`      | Greater than                |
-| Greater or Equal | `gte:value`     | Greater than or equal       |
-| Less Than        | `lt:value`      | Less than                   |
-| Less or Equal    | `lte:value`     | Less than or equal          |
-| Like             | `like:value`    | Pattern matching (SQL LIKE) |
-| Starts With      | `starts:value`  | Starts with value           |
-| Ends With        | `ends:value`    | Ends with value             |
-| In               | `in:val1,val2`  | Value in list               |
-| Not In           | `nin:val1,val2` | Value not in list           |
+| Operation        | Syntax            | Description                           |
+| ---------------- | ----------------- | ------------------------------------- |
+| Equal            | `eq:value`        | Exact match                           |
+| Not Equal        | `ne:value`        | Not equal to value                    |
+| Greater Than     | `gt:value`        | Greater than                          |
+| Greater or Equal | `gte:value`       | Greater than or equal                 |
+| Less Than        | `lt:value`        | Less than                             |
+| Less or Equal    | `lte:value`       | Less than or equal                    |
+| Like             | `like:value`      | Pattern matching (SQL LIKE '%?%')     |
+| Not like         | `nlike:value`     | Pattern matching (SQL NOT LIKE '%?%') |
+| Regular Like     | `rlike:value`     | Pattern matching (SQL LIKE '?')       |
+| Starts With      | `starts:value`    | Starts with value                     |
+| Ends With        | `ends:value`      | Ends with value                       |
+| In               | `in:val1,val2`    | Value in list                         |
+| Not In           | `nin:val1,val2`   | Value not in list                     |
+| Null (or not)    | `null:true/false` | Check for null or non null            |
+
+Also has integration with arrays of PostgreSQL
+
+| Operation        | Syntax                | Description                                             |
+| ---------------- | --------------------- | ------------------------------------------------------- |
+| Overlap          | `ovlp:val1`           | Overlap with array (SQL array && array == true )        |
+| Not overlap      | `novlp:val1`          | Not overlaps with array  (SQL array && array == false ) |
+| Contained by     | `containedBy:val1`    | Contained by array (SQL array @\> array == true)        |
+| Not contained by | `notContainedBy:val1` | Not contained by (SQL array @\> array == false)         |
 
 ## Next Steps
 
