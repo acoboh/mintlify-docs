@@ -1,6 +1,6 @@
 ---
-title: QFParam vs QFMultiParam
-description: Understand the differences between @QFParam and @QFMultiParam annotations and when to use each
+title: "QFParam vs QFMultiParam"
+description: "Understand the differences between @QFParam and @QFMultiParam annotations and when to use each"
 ---
 
 ## Overview
@@ -52,11 +52,12 @@ public Page<PostDTO> getPosts(
 ### When to Use @QFParam
 
 <Note>
-Use `@QFParam` when:
-- You want a single, dedicated filter parameter
-- You need to clearly separate filtering from other query parameters
-- You prefer explicit naming (e.g., `filter=...`)
-- You want backward compatibility with older API designs
+  Use `@QFParam` when:
+
+  - You want a single, dedicated filter parameter
+  - You need to clearly separate filtering from other query parameters
+  - You prefer explicit naming (e.g., `filter=...`)
+  - You want backward compatibility with older API designs
 </Note>
 
 ### Advantages
@@ -94,7 +95,7 @@ public Page<PostDTO> getPosts(
 ```
 
 <Note>
-Notice that `@QFMultiParam` doesn't require `@RequestParam` - it automatically binds to query parameters.
+  Notice that `@QFMultiParam` doesn't require `@RequestParam` - it automatically binds to query parameters.
 </Note>
 
 ### URL Examples
@@ -153,11 +154,12 @@ GET /posts?author[eq]=John&likes[gt]=50
 ### When to Use @QFMultiParam
 
 <Note>
-Use `@QFMultiParam` when:
-- You want a more RESTful, readable URL structure
-- Your API consumers prefer individual parameters
-- You want to align with common API patterns
-- You're building a public API where usability matters
+  Use `@QFMultiParam` when:
+
+  - You want a more RESTful, readable URL structure
+  - Your API consumers prefer individual parameters
+  - You want to align with common API patterns
+  - You're building a public API where usability matters
 </Note>
 
 ### Advantages
@@ -176,16 +178,16 @@ Use `@QFMultiParam` when:
 
 ## Comparison Table
 
-| Feature | @QFParam | @QFMultiParam |
-|---------|----------|---------------|
-| **URL Style** | Single parameter | Multiple parameters |
-| **Example** | `?filter=author=eq:John&likes=gt:50` | `?author=eq:John&likes=gt:50` |
-| **Parameter Name** | Custom (you choose) | Auto-mapped from fields |
-| **URL Length** | Can be longer | Generally shorter |
-| **Readability** | Requires syntax knowledge | More intuitive |
-| **Separation** | Explicit separation | Mixed with other params |
-| **Syntax Styles** | RHS Colon only | RHS Colon or LHS Brackets |
-| **Use Case** | Internal APIs, complex filters | Public APIs, simple filters |
+| Feature            | @QFParam                             | @QFMultiParam                 |
+| ------------------ | ------------------------------------ | ----------------------------- |
+| **URL Style**      | Single parameter                     | Multiple parameters           |
+| **Example**        | `?filter=author=eq:John&likes=gt:50` | `?author=eq:John&likes=gt:50` |
+| **Parameter Name** | Custom (you choose)                  | Auto-mapped from fields       |
+| **URL Length**     | Can be longer                        | Generally shorter             |
+| **Readability**    | Requires syntax knowledge            | More intuitive                |
+| **Separation**     | Explicit separation                  | Mixed with other params       |
+| **Syntax Styles**  | RHS Colon only                       | RHS Colon or LHS Brackets     |
+| **Use Case**       | Internal APIs, complex filters       | Public APIs, simple filters   |
 
 ## Use Case Comparison
 
@@ -206,8 +208,9 @@ Let's see how the same filters look with both approaches:
         return postService.findAll(filter, pageable);
     }
     ```
-    
+
     **Usage:**
+
     ```bash
     GET /api/posts?filter=author=eq:John&filter=published=eq:true&filter=likes=gte:100
     ```
@@ -223,8 +226,9 @@ Let's see how the same filters look with both approaches:
         return postService.findAll(filter, pageable);
     }
     ```
-    
+
     **Usage:**
+
     ```bash
     # RHS Colon style
     GET /api/posts?author=eq:John&published=eq:true&likes=gte:100
@@ -240,48 +244,40 @@ Let's see how the same filters look with both approaches:
 ### For @QFParam
 
 <Steps>
+  1. **Use descriptive parameter names**
 
-1. **Use descriptive parameter names**
-   ```java
-   @RequestParam(name = "filter") // Clear and concise
-   @RequestParam(name = "q")      // Too short, unclear
-   ```
+     ```java
+     @RequestParam(name = "filter") // Clear and concise
+     @RequestParam(name = "q")      // Too short, unclear
+     ```
+  2. **Make it optional with sensible defaults**
 
-2. **Make it optional with sensible defaults**
-   ```java
-   @RequestParam(required = false, defaultValue = "")
-   ```
-
-3. **Document the filter syntax**
-   - Provide examples in your API documentation
-   - Show common filter patterns
-   - List available operations
-
+     ```java
+     @RequestParam(required = false, defaultValue = "")
+     ```
+  3. **Document the filter syntax**
+     - Provide examples in your API documentation
+     - Show common filter patterns
+     - List available operations
 </Steps>
 
 ### For @QFMultiParam
 
 <Steps>
+  1. **Avoid parameter name conflicts**
 
-1. **Avoid parameter name conflicts**
-   ```java
-   // Bad: 'page' is also used for pagination
-   @QFElement("page")
-   private String page;
-   
-   // Good: Use specific field names
-   @QFElement("pageNumber")
-   private String pageNumber;
-   ```
-
-2. **Choose one parameter style and stick with it**
-   - Don't mix RHS Colon and LHS Brackets in the same API
-   - Document which style your API uses
-
-3. **Reserve common parameter names**
-   - Avoid filter fields named: `page`, `size`, `sort`
-   - Keep standard pagination/sorting parameters separate
-
+     ```java
+     // Bad: 'page' is also used for pagination
+     @QFElement("page")
+     private String page;
+     
+     // Good: Use specific field names
+     @QFElement("pageNumber")
+     private String pageNumber;
+     ```
+  3. **Reserve common parameter names**
+     - Avoid filter fields named: `page`, `size`, `sort`
+     - Keep standard pagination/sorting parameters separate
 </Steps>
 
 ## Switching Between Styles
@@ -302,7 +298,7 @@ public class PostFilterDef {
 ```
 
 <Warning>
-Changing from `@QFParam` to `@QFMultiParam` (or vice versa) is a **breaking API change** for your consumers. Plan migrations carefully.
+  Changing from `@QFParam` to `@QFMultiParam` (or vice versa) is a **breaking API change** for your consumers. Plan migrations carefully.
 </Warning>
 
 ## Real-World Examples
@@ -321,7 +317,7 @@ Changing from `@QFParam` to `@QFMultiParam` (or vice versa) is a **breaking API 
         return productService.search(filter);
     }
     ```
-    
+
     ```bash
     GET /api/products?query=category=eq:Electronics&price=gte:100&price=lte:500&inStock=eq:true
     ```
@@ -336,7 +332,7 @@ Changing from `@QFParam` to `@QFMultiParam` (or vice versa) is a **breaking API 
         return productService.search(filter);
     }
     ```
-    
+
     ```bash
     GET /products?category=eq:Electronics&price[gte]=100&price[lte]=500&inStock=eq:true
     ```

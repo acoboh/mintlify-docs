@@ -1,6 +1,6 @@
 ---
-title: Introduction to QueryFilterJPA
-description: Learn how QueryFilterJPA simplifies dynamic filtering in Spring Boot JPA applications
+title: "Introduction to QueryFilterJPA"
+description: "Learn how QueryFilterJPA simplifies dynamic filtering in Spring Boot JPA applications"
 ---
 
 ## What is QueryFilterJPA?
@@ -21,27 +21,22 @@ QueryFilterJPA eliminates these pain points by providing a declarative, annotati
 ## Key Features
 
 <CardGroup cols={2}>
-  <Card title="Easy Annotations" icon="at">
+  <Card icon="at" title="Easy Annotations">
     Define filterable fields with simple `@QFElement` annotations on your filter definition class
   </Card>
-  
-  <Card title="Dual Syntax Support" icon="code">
+  <Card icon="code" title="Dual Syntax Support">
     Supports both RHS Colon (`field=eq:value`) and LHS Brackets (`field[eq]=value`) syntax out of the box
   </Card>
-  
-  <Card title="Auto OpenAPI Docs" icon="book">
+  <Card icon="book" title="Auto OpenAPI Docs">
     Automatically generates OpenAPI/Swagger documentation for all your filters
   </Card>
-  
-  <Card title="PostgreSQL Support" icon="database">
+  <Card icon="database" title="PostgreSQL Support">
     Advanced filtering for PostgreSQL arrays, JSON fields, and other PostgreSQL-specific types
   </Card>
-  
-  <Card title="JPA Integration" icon="link">
+  <Card icon="link" title="JPA Integration">
     Seamless integration with `JpaSpecificationExecutor` - works with your existing repositories
   </Card>
-  
-  <Card title="Flexible Parameters" icon="sliders">
+  <Card icon="sliders" title="Flexible Parameters">
     Use `@QFParam` for single filter parameter or `@QFMultiParam` for multiple filter parameters
   </Card>
 </CardGroup>
@@ -59,7 +54,7 @@ QueryFilterJPA is ideal for:
 ✅ **Microservices** - Standardize filtering across multiple services with consistent syntax
 
 <Note>
-QueryFilterJPA works with both **Spring Boot 3** and **Spring Boot 4** through dedicated artifact versions.
+  QueryFilterJPA works with both **Spring Boot 3** and **Spring Boot 4** through dedicated artifact versions.
 </Note>
 
 ## How It Works
@@ -69,7 +64,7 @@ QueryFilterJPA follows a simple three-step pattern:
 <Steps>
   <Step title="Define Your Filter">
     Create a filter definition class annotated with `@QFDefinitionClass`, specifying which fields can be filtered.
-    
+
     ```java
     @QFDefinitionClass(PostBlog.class)
     public class PostFilterDef {
@@ -85,10 +80,9 @@ QueryFilterJPA follows a simple three-step pattern:
     }
     ```
   </Step>
-  
   <Step title="Enable QueryFilter">
     Add `@EnableQueryFilter` to your Spring Boot application configuration.
-    
+
     ```java
     @EnableQueryFilter(basePackageClasses = PostFilterDef.class)
     @SpringBootApplication
@@ -97,14 +91,24 @@ QueryFilterJPA follows a simple three-step pattern:
     }
     ```
   </Step>
-  
+  <Step title="Create the respositor">
+    Create your repository for the entity 
+
+    ```java
+    // Just extends JpaSpecificationExecutor and the filter is ready
+    public interface PostBlogRepository extends 
+    	JpaRepository<PostBlog, Long>, 
+    	JpaSpecificationExecutor<PostBlog> {
+    }
+    ```
+  </Step>
   <Step title="Use in Controllers">
     Inject the `QueryFilter` into your controller methods using `@QFParam` or `@QFMultiParam`.
-    
+
     ```java
     @GetMapping("/posts")
     public List<PostBlog> getPosts(
-        @RequestParam(defaultValue = "") @QFParam(PostFilterDef.class) QueryFilter<PostBlog> filter) {
+        @QFMultiParam(PostFilterDef.class) QueryFilter<PostBlog> filter) {
         return repository.findAll(filter);
     }
     ```
@@ -114,7 +118,7 @@ QueryFilterJPA follows a simple three-step pattern:
 That's it! Your endpoint now supports powerful filtering:
 
 ```bash
-GET /posts?filter=author=eq:john&likes=gte:100&sort=-createDate
+GET /posts?author=john&likes=gte:100&sort=-createDate
 ```
 
 ## Architecture Overview
@@ -130,8 +134,8 @@ QueryFilterJPA consists of several key components:
 
 ### Controller Integration Layer
 
+- `@QFMultiParam`: Binds multiple individual query parameters to a filter definition
 - **`@QFParam`**: Binds a single `filter` parameter to a `QueryFilter` object
-- **`@QFMultiParam`**: Binds multiple individual query parameters to a filter definition
 - **`QueryFilter<T>`**: Type-safe filter object that implements JPA `Specification<T>`
 
 ### Query Processing Layer
@@ -145,37 +149,48 @@ At runtime, QueryFilterJPA:
 5. Returns a `Specification` that can be used with `JpaSpecificationExecutor`
 
 <Tip>
-QueryFilterJPA is fully compatible with Spring Data JPA's `JpaSpecificationExecutor`, so you can combine generated filters with custom specifications.
+  QueryFilterJPA is fully compatible with Spring Data JPA's `JpaSpecificationExecutor`, so you can combine generated filters with custom specifications.
 </Tip>
 
 ## Supported Operations
 
 QueryFilterJPA supports a rich set of filter operations:
 
-| Operation | Syntax | Description |
-|-----------|--------|-------------|
-| Equal | `eq:value` | Exact match |
-| Not Equal | `ne:value` | Not equal to value |
-| Greater Than | `gt:value` | Greater than |
-| Greater or Equal | `gte:value` | Greater than or equal |
-| Less Than | `lt:value` | Less than |
-| Less or Equal | `lte:value` | Less than or equal |
-| Like | `like:value` | Pattern matching (SQL LIKE) |
-| Starts With | `starts:value` | Starts with value |
-| Ends With | `ends:value` | Ends with value |
-| In | `in:val1,val2` | Value in list |
-| Not In | `nin:val1,val2` | Value not in list |
+| Operation        | Syntax            | Description                           |
+| ---------------- | ----------------- | ------------------------------------- |
+| Equal            | `eq:value`        | Exact match                           |
+| Not Equal        | `ne:value`        | Not equal to value                    |
+| Greater Than     | `gt:value`        | Greater than                          |
+| Greater or Equal | `gte:value`       | Greater than or equal                 |
+| Less Than        | `lt:value`        | Less than                             |
+| Less or Equal    | `lte:value`       | Less than or equal                    |
+| Like             | `like:value`      | Pattern matching (SQL LIKE '%?%')     |
+| Not like         | `nlike:value`     | Pattern matching (SQL NOT LIKE '%?%') |
+| Regular Like     | `rlike:value`     | Pattern matching (SQL LIKE '?')       |
+| Starts With      | `starts:value`    | Starts with value                     |
+| Ends With        | `ends:value`      | Ends with value                       |
+| In               | `in:val1,val2`    | Value in list                         |
+| Not In           | `nin:val1,val2`   | Value not in list                     |
+| Null (or not)    | `null:true/false` | Check for null or non null            |
+
+Also has integration with arrays of PostgreSQL
+
+| Operation        | Syntax                | Description                                             |
+| ---------------- | --------------------- | ------------------------------------------------------- |
+| Overlap          | `ovlp:val1`           | Overlap with array (SQL array && array == true )        |
+| Not overlap      | `novlp:val1`          | Not overlaps with array  (SQL array && array == false ) |
+| Contained by     | `containedBy:val1`    | Contained by array (SQL array @\> array == true)        |
+| Not contained by | `notContainedBy:val1` | Not contained by (SQL array @\> array == false)         |
 
 ## Next Steps
 
 Ready to get started? Continue to the next sections:
 
 <CardGroup cols={2}>
-  <Card title="Installation" icon="download" href="/installation">
+  <Card icon="download" href="/installation" title="Installation">
     Add QueryFilterJPA to your Spring Boot project
   </Card>
-  
-  <Card title="Quick Start" icon="rocket" href="/quickstart">
+  <Card icon="rocket" href="/quickstart" title="Quick Start">
     Build your first filtered endpoint in 5 minutes
   </Card>
 </CardGroup>

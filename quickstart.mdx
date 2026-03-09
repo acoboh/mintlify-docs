@@ -19,6 +19,7 @@ This guide will walk you through creating your first filtered API endpoint with 
     Add QueryFilterJPA to your project. Choose the artifact matching your Spring Boot version:
 
     <CodeGroup>
+
     ```xml Spring Boot 4
     <dependency>
         <groupId>io.github.acoboh</groupId>
@@ -27,6 +28,7 @@ This guide will walk you through creating your first filtered API endpoint with 
     </dependency>
     ```
 
+    
     ```xml Spring Boot 3
     <dependency>
         <groupId>io.github.acoboh</groupId>
@@ -35,16 +37,18 @@ This guide will walk you through creating your first filtered API endpoint with 
     </dependency>
     ```
 
+    
     ```gradle Spring Boot 4 (Gradle)
     implementation 'io.github.acoboh:query-filter-jpa-4:2.0.0'
     ```
 
+    
     ```gradle Spring Boot 3 (Gradle)
     implementation 'io.github.acoboh:query-filter-jpa-3:2.0.0'
     ```
+
     </CodeGroup>
   </Step>
-
   <Step title="Create your JPA entity">
     Create a simple entity to filter. We'll use a blog post example:
 
@@ -72,7 +76,6 @@ This guide will walk you through creating your first filtered API endpoint with 
     }
     ```
   </Step>
-
   <Step title="Create a repository">
     Create a JPA repository that extends `JpaSpecificationExecutor`:
 
@@ -85,10 +88,9 @@ This guide will walk you through creating your first filtered API endpoint with 
     ```
 
     <Note>
-    The `JpaSpecificationExecutor` interface is required for QueryFilterJPA to work. It provides the `findAll(Specification<T>)` method that QueryFilter implements.
+      The `JpaSpecificationExecutor` interface is required for QueryFilterJPA to work. It provides the `findAll(Specification<T>)` method that QueryFilter implements.
     </Note>
   </Step>
-
   <Step title="Define your filter class">
     Create a filter definition class with annotations:
 
@@ -112,12 +114,11 @@ This guide will walk you through creating your first filtered API endpoint with 
     ```
 
     <Info>
-    - `@QFDefinitionClass` links this filter to your entity
-    - `@QFElement` marks each filterable field
-    - `@QFDate` enables date parsing and operations
+      - `@QFDefinitionClass` links this filter to your entity
+      - `@QFElement` marks each filterable field
+      - `@QFDate` enables date parsing and operation
     </Info>
   </Step>
-
   <Step title="Enable QueryFilter">
     Add `@EnableQueryFilter` to your main application class or a configuration class:
 
@@ -132,10 +133,9 @@ This guide will walk you through creating your first filtered API endpoint with 
     ```
 
     <Tip>
-    You can also use `basePackages` to scan multiple packages for filter definitions.
+      You can also use `basePackages` to scan multiple packages for filter definitions.
     </Tip>
   </Step>
-
   <Step title="Create a controller">
     Create a REST controller that uses the filter:
 
@@ -163,11 +163,15 @@ This guide will walk you through creating your first filtered API endpoint with 
         ```
 
         **Example request:**
-        ```bash
-        curl "http://localhost:8080/api/posts?filter=author=eq:john&likes=gte:10&sort=-createDate"
-        ```
-      </Tab>
 
+        ```bash
+        curl "http://localhost:8080/api/posts?filter=author%3Deq%3Ajohn%26likes%3Dgte%3A10%26sort%3D-createDate"
+        ```
+
+        <Info>
+          The `filter` request param should be URL-Encoded. The original filter is: `author=eq:john&likes=gte:10&sort=-createDate`
+        </Info>
+      </Tab>
       <Tab title="Using @QFMultiParam">
         Use `@QFMultiParam` when you want each filter as a separate query parameter:
 
@@ -190,6 +194,7 @@ This guide will walk you through creating your first filtered API endpoint with 
         ```
 
         **Example request:**
+
         ```bash
         curl "http://localhost:8080/api/posts?author=eq:john&likes=gte:10&sort=-createDate"
         ```
@@ -203,7 +208,7 @@ This guide will walk you through creating your first filtered API endpoint with 
 Now you can test your filtered endpoint:
 
 <Tabs>
-  <Tab title="RHS Colon Syntax">
+  <Tab title="RHS Colon Syntax @QFParam">
     ```bash Filter by author
     curl "http://localhost:8080/api/posts?filter=author=eq:john"
     ```
@@ -216,12 +221,11 @@ Now you can test your filtered endpoint:
     curl "http://localhost:8080/api/posts?filter=author=eq:john&sort=-createDate"
     ```
 
-    ```bash Search by title
+    ```bash Search by
     curl "http://localhost:8080/api/posts?filter=title=like:Spring"
     ```
   </Tab>
-
-  <Tab title="LHS Brackets Syntax">
+  <Tab title="LHS Brackets Syntax @QFParam">
     ```bash Filter by author
     curl "http://localhost:8080/api/posts?filter=author[eq]=john"
     ```
@@ -234,8 +238,42 @@ Now you can test your filtered endpoint:
     curl "http://localhost:8080/api/posts?filter=author[eq]=john&sort=-createDate"
     ```
 
-    ```bash Search by title
+    ```bash Search by
     curl "http://localhost:8080/api/posts?filter=title[like]=Spring"
+    ```
+  </Tab>
+  <Tab title="RHS Colon Syntax @QFMultiParam">
+    ```bash Filter by author
+    curl "http://localhost:8080/api/posts?author=john"
+    ```
+
+    ```bash Multiple filters
+    curl "http://localhost:8080/api/posts?author=john&likes=gte:10"
+    ```
+
+    ```bash With sorting
+    curl "http://localhost:8080/api/posts?author=john&sort=-createDate"
+    ```
+
+    ```bash Search by
+    curl "http://localhost:8080/api/posts?title=like:Spring"
+    ```
+  </Tab>
+  <Tab title="LHS Brackets Syntax @QFMultiParam">
+    ```bash Filter by author
+    curl "http://localhost:8080/api/posts?author=john"
+    ```
+
+    ```bash Multiple filters
+    curl "http://localhost:8080/api/posts?author=john&likes[gte]=10"
+    ```
+
+    ```bash With sorting
+    curl "http://localhost:8080/api/posts?author=john&sort=-createDate"
+    ```
+
+    ```bash Search by
+    curl "http://localhost:8080/api/posts?title=[like]Spring"
     ```
   </Tab>
 </Tabs>
@@ -265,20 +303,31 @@ Now you can test your filtered endpoint:
 
 You can use these operations in your filters:
 
-| Operation | Code | Example | Description |
-|-----------|------|---------|-------------|
-| Equal | `eq` | `author=eq:john` | Exact match |
-| Not Equal | `ne` | `author=ne:john` | Not equal |
-| Greater Than | `gt` | `likes=gt:10` | Greater than |
-| Greater or Equal | `gte` | `likes=gte:10` | Greater or equal |
-| Less Than | `lt` | `likes=lt:100` | Less than |
-| Less or Equal | `lte` | `likes=lte:100` | Less or equal |
-| Like | `like` | `title=like:Spring` | Contains (case-insensitive by default) |
-| Starts With | `starts` | `title=starts:Getting` | Starts with |
-| Ends With | `ends` | `title=ends:Boot` | Ends with |
-| In | `in` | `author=in:john,jane,bob` | Value in list |
-| Not In | `nin` | `author=nin:spam,test` | Value not in list |
-| Is Null | `null` | `author=null:true` | Is null check |
+| Operation        | Syntax            | Description                           |
+| :--------------- | :---------------- | :------------------------------------ |
+| Equal            | `eq:value`        | Exact match                           |
+| Not Equal        | `ne:value`        | Not equal to value                    |
+| Greater Than     | `gt:value`        | Greater than                          |
+| Greater or Equal | `gte:value`       | Greater than or equal                 |
+| Less Than        | `lt:value`        | Less than                             |
+| Less or Equal    | `lte:value`       | Less than or equal                    |
+| Like             | `like:value`      | Pattern matching (SQL LIKE '%?%')     |
+| Not like         | `nlike:value`     | Pattern matching (SQL NOT LIKE '%?%') |
+| Regular Like     | `rlike:value`     | Pattern matching (SQL LIKE '?')       |
+| Starts With      | `starts:value`    | Starts with value                     |
+| Ends With        | `ends:value`      | Ends with value                       |
+| In               | `in:val1,val2`    | Value in list                         |
+| Not In           | `nin:val1,val2`   | Value not in list                     |
+| Null (or not)    | `null:true/false` | Check for null or non null            |
+
+You can also use PostgreSQL native operations
+
+| Operation        | Syntax                | Description                                            |
+| :--------------- | :-------------------- | :----------------------------------------------------- |
+| Overlap          | `ovlp:val1`           | Overlap with array (SQL array && array == true )       |
+| Not overlap      | `novlp:val1`          | Not overlaps with array (SQL array && array == false ) |
+| Contained by     | `containedBy:val1`    | Contained by array (SQL array @\> array == true)       |
+| Not contained by | `notContainedBy:val1` | Not contained by (SQL array @\> array == false)        |
 
 ## Sorting
 
@@ -299,35 +348,16 @@ Sort results by adding `sort` parameter:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card
-    title="Core Concepts"
-    icon="book-open"
-    href="/concepts/filter-definitions"
-  >
+  <Card icon="book-open" href="/concepts/filter-definitions" title="Core Concepts">
     Learn about filter definitions, operations, and syntax in depth
   </Card>
-  
-  <Card
-    title="Advanced Features"
-    icon="wand-magic-sparkles"
-    href="/guides/postgresql-arrays"
-  >
+  <Card icon="wand-magic-sparkles" href="/guides/postgresql-arrays" title="Advanced Features">
     Explore PostgreSQL arrays, JSON filtering, and custom predicates
   </Card>
-  
-  <Card
-    title="OpenAPI Integration"
-    icon="code"
-    href="/openapi/overview"
-  >
+  <Card icon="code" href="/openapi/overview" title="OpenAPI Integration">
     Add automatic Swagger documentation for your filters
   </Card>
-  
-  <Card
-    title="API Reference"
-    icon="terminal"
-    href="/api/annotations/qf-element"
-  >
+  <Card icon="terminal" href="/api/annotations/qf-element" title="API Reference">
     Complete reference for all annotations and classes
   </Card>
 </CardGroup>
