@@ -57,6 +57,8 @@ public class PostFilterDef {
   ```
 </ParamField>
 
+# Filter for basic elements
+
 ## @QFElement
 
 The `@QFElement` annotation defines a filterable field in your filter definition class. This is the most commonly used annotation for defining filter fields.
@@ -150,9 +152,12 @@ private String authorName;
     Use with caution! It's highly recommended to combine with `@QFBlockParsing` to prevent user-provided values.
   </Warning>
   ```java
-  @QFElement(value = "createdBy", isSpPELExpression = true)
+  @QFElement(value = "createdBy", 
+  	isSpPELExpression = true, 
+  	defaultValue = "@auth.name"
+  )
   @QFBlockParsing
-  private String createdBy; // Can use principal?.name automatically
+  private String createdBy; 
   ```
 </ParamField>
 
@@ -254,6 +259,8 @@ private LocalDateTime publishDate;
   ```
 </ParamField>
 
+# Filter for JSON data
+
 ## @QFJsonElement
 
 Define filters for JSON fields (requires database JSON support).
@@ -300,6 +307,8 @@ private String tags;
 <ParamField path="order" default="0" type="int">
   Execution order
 </ParamField>
+
+# Filter for collections
 
 ## @QFCollectionElement
 
@@ -351,6 +360,8 @@ private int commentCount;
   Execution order
 </ParamField>
 
+# Filter for discriminator types
+
 ## @QFDiscriminator
 
 Filter entities by discriminator type in inheritance hierarchies.
@@ -400,7 +411,7 @@ private String discriminator;
   Execution order
 </ParamField>
 
-## Complete Example
+# Complete Example
 
 Here's a comprehensive filter definition combining multiple annotations:
 
@@ -433,9 +444,9 @@ public class PostFilterDef {
         value = "postType",
         allowedOperations = {QFOperationEnum.EQUAL, QFOperationEnum.IN}
     )
-    private String postType;
+    private PostType postType;
 
-    @QFElement("published")
+    @QFElement(value = "published", defaultValues = "true")
     @QFBlockParsing
     private boolean published;
 
