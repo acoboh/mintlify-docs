@@ -120,14 +120,14 @@ mode: "custom"
           
           @GetMapping
           public List<PostBlog> getPosts(
-              @QFParam(PostFilterDef.class) QueryFilter<PostBlog> filter) {
+              @QFMultiParam(PostFilterDef.class) QueryFilter<PostBlog> filter) {
               return repository.findAll(filter);
           }
       }
       ```
       
       <Note>
-      Now you can filter with URLs like `/posts?filter=author=eq:john&likes=gte:10&sort=-createDate`
+      Now you can filter with URLs like `/posts?author=john&likes=gte:10&sort=-createDate`
       </Note>
     </Step>
   </Steps>
